@@ -31,7 +31,7 @@ class Master:
 
     @property
     def warehouse(self) -> Warehouse:
-        return self.__whouse
+        return self.__whouse.seeds
 
     @property
     def gardenbed(self) -> list:
@@ -360,7 +360,7 @@ class Master:
             if not value:
                 continue
             print(f"{param}: {round(value * .85, 2)}")
-        return plant_data["Harvest"], plant_data["Live"], plant_data["Immunity"], plant_data["Ills count"]
+        return plant_data
 
     def step(self, count: int = 1):
         """Call step in warehouse and gardenbed. Also call
@@ -376,3 +376,4 @@ class Master:
             json.dump(self.convert_garden_to_dict(self.__gbed), autosave)
         with open("autosave_warehouse.json", "w") as autosave:
             json.dump(self.__whouse.seeds, autosave)
+        print("Do step")

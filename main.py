@@ -3,7 +3,7 @@ import json
 
 from menu import menu
 from Master import Master
-# from menu_gui import 
+from menu_gui import menu_gui
 
 
 master = Master()
@@ -86,6 +86,12 @@ def run_menu():
 
 
 @main.command()
+def run_gui_menu():
+    """Load this app in GUI interface."""
+    menu_gui(master)
+
+
+@main.command()
 @click.option("--sort-by", default="Name", type=click.Choice([
     "Name", "Harvest", "Live", "Immunity", "Ills"
 ], case_sensitive=False), help="Sort items by key.")
@@ -96,7 +102,7 @@ def sort_elements(sort_by: str):
 
 @main.command()
 def avg():
-    """Show avg statistics."""
+    """Show avg plants statistics."""
     master.avg_statistics()
 
 
