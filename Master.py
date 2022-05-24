@@ -214,7 +214,7 @@ class Master:
     def grow_plant(self, inp_plant_name: str = None, inp_gardenbed_place: int = None):
         """Grow plant in gardenbed and delete one seed from warehouse."""
         self.restore_info()
-        plant_name: str = inp_plant_name
+        plant_name: str = inp_plant_name.strip()
         gardenbed_number: int = inp_gardenbed_place
         if not plant_name:
             try:

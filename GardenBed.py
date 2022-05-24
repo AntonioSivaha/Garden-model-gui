@@ -103,7 +103,7 @@ class GardenBed:
                 garden_plant.sick()
             if garden_plant in ["Ambrosia", "Dandelion", "Cornflower"] and random() < 0.3:
                 self._garden.remove(garden_plant)
-        if len(self._garden) < 5 and random() < 0.4:
+        if len(self._garden) < 5 and random() < 0.1:
             self._garden.append(choice(["Ambrosia", "Dandelion", "Cornflower"]))
         if random() < 0.2:
             self._weeding = False
