@@ -241,15 +241,15 @@ class Master:
     def delete_plant(self, inp_gardenbed_number: int = None, inp_position: int = None):
         """Delete chosen plant."""
         self.restore_info()
-        gardenbed_number = inp_gardenbed_number - 1
+        gardenbed_number = inp_gardenbed_number
         position = inp_position
-        if not inp_gardenbed_number:
+        if inp_gardenbed_number is None:
             try:
                 gardenbed_number: int = int(input("Enter garden number: ")) - 1
                 position: int = int(input("Enter position: ")) - 1
             except TypeError as err:
                 print(err)
-        if not inp_position:
+        if inp_position is None:
             try:
                 position: int = int(input("Enter position: ")) - 1
             except TypeError as err:

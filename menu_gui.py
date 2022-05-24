@@ -34,7 +34,7 @@ class GardenApp:
         self.palm_sprites = tuple(load_sprite(f"palm/Palm_Stage_{n}.png") for n in range(1, 3 + 1))
         self.orange_sprites = tuple(load_sprite(f"orange/Orange_Stage_{n}.png") for n in range(1, 6 + 1))
 
-        # Garden back
+        # List for garden plants
         self.master = master
         self.plants_list = [[] for _ in range(5)]
 
@@ -72,7 +72,7 @@ class GardenApp:
             pygame_menu.events.BACK
         )
 
-        # Menu
+        # Main Menu
         self.theme = pygame_menu.themes.THEME_DARK.copy()
         self.theme.background_color = (0, 0, 0, 180)
         self.menu = pygame_menu.Menu(
@@ -86,23 +86,23 @@ class GardenApp:
             "GARDEN MODEL"
         ).translate(0, -25)
         self.menu.add.button(
-            "Step",
+            "STEP",
             self._do_step
         )
         self.menu.add.button(
-            "Garden",
+            "GARDEN",
             self._main_garden
         )
         self.menu.add.button(
-            "Warehouse",
+            "WAREHOUSE",
             self.warehouse_menu
         )
         self.menu.add.button(
-            "Statistics",
+            "STATISTICS",
             self.statistics_menu
         )
         self.menu.add.button(
-            "Exit",
+            "EXIT",
             pygame_menu.events.EXIT
         )
 
@@ -116,37 +116,60 @@ class GardenApp:
             position=(1000, 0, False),
             theme=self.garden_menu_theme
         )
-        menu_button = self.garden_menu.add.button(
-            "MENU",
-            self._call_main_menu,
-            align=pygame_menu.locals.ALIGN_RIGHT
-        )
-        menu_button.translate(-5, 390)
+        
         do_step_button = self.garden_menu.add.button(
             "DO STEP",
             self._do_step,
-            # align=pygame_menu.locals.ALIGN_LEFT
         )
-        do_step_button.translate(0, -345)
-        self.garden_menu.add.button(
+        do_step_button.translate(0, -270)
+        
+        plant_button = self.garden_menu.add.button(
             "PLANT",
             self._plant
         )
+        plant_button.translate(0, -260)
         
-        # New plant
+        delete_button = self.garden_menu.add.button(
+            "GARDENBED",
+            self._choose_garden
+        )
+        delete_button.translate(0, -250)
+
+        menu_button = self.garden_menu.add.button(
+            "MENU",
+            self._call_main_menu
+        )
+        menu_button.translate(0, -240)
+        
+        # New plant menu
         self.__new_plant_name: str = "Poppy"
         self.__new_plant_position: int = 0
         self.planting_menu = pygame_menu.Menu(
             title="",
+            enabled=False,
             width=600,
             height=400
         )
 
+        # Garden selector menu
+        self.__gardenbed_number: int = 0
+        self.garden_selector_menu = pygame_menu.Menu(
+            title="",
+            enabled=False,
+            width=600,
+            height=600
+        )
+
+        # Cut plant
+        self.__cut_plant_number: int = 0
+
 ########
     def _plant(self):
+        """Garden menu option for create new plant."""
         self.garden_menu.disable()
         self.planting_menu = pygame_menu.Menu(
             title="",
+            enabled=False,
             width=600,
             height=400
         )
@@ -170,6 +193,7 @@ class GardenApp:
             onchange=self._plant_name,
             onreturn=self._plant_name
         )
+
         self.planting_menu.add.selector(
             title="GARDENT",
             items=[
@@ -183,41 +207,148 @@ class GardenApp:
             onchange=self._plant_position,
             onreturn=self._plant_position
         )
+
         self.planting_menu.add.button(
-            "Plant",
+            "PLANT",
             self._add_new_plant
         )
+
         self.planting_menu.add.button(
-            "Canacel",
+            "CANCEL",
             self._main_garden
         )
 
+        self.planting_menu.enable()
+
     def _plant_name(self, value, plant_name):
+        """Plant name getter."""
         self.__new_plant_name = plant_name
         print(self.__new_plant_name)
 
     def _plant_position(self, value, plant_position):
+        """Plant position getter."""
         self.__new_plant_position = plant_position
         print(self.__new_plant_position)
 
     def _add_new_plant(self):
+        """Add selected plant to selected gardenbed in master."""
         if self.__new_plant_name and self.__new_plant_position >= 0:
             self.master.grow_plant(self.__new_plant_name, self.__new_plant_position)
             self._main_garden()
+
+    def _choose_garden(self):
+        """Window with garden selector."""
+        self.garden_menu.disable()
+        self.garden_selector_menu = pygame_menu.Menu(
+            title="",
+            enabled=False,
+            width=600,
+            height=600
+        )
+        # self.garden_selector_menu.add.label(
+        #     "SELECT GARDEN"
+        # ).translate(0, -100)
+        
+        self.garden_selector_menu.add.selector(
+            title="GARDEN NUMBER",
+            items=[
+                ("1", 0),
+                ("2", 1),
+                ("3", 2),
+                ("4", 3),
+                ("5", 4)
+            ],
+            default=0,
+            onchange=self._selected_garden,
+            onreturn=self._selected_garden
+        ).translate(0, -100)
+
+        self.garden_selector_menu.add.selector(
+            title="PLANT NUMBER",
+            items=[
+                ("NO", None),
+                ("1", 0),
+                ("2", 1),
+                ("3", 2),
+                ("4", 3),
+                ("5", 4)
+            ],
+            default=0,
+            onchange=self._cut_plant_number,
+            onreturn=self._cut_plant_number
+        ).translate(0, -50)
+        self.garden_selector_menu.add.button(
+            "CUT PLANT",
+            self._cut_plant
+        )
+
+        self.garden_selector_menu.add.button(
+            "DETAIL STATISTICS",
+            self._show_detail_statistics_menu
+        )
+
+        self.garden_selector_menu.add.button(
+            "WEED",
+            self._weed_plants
+        )
+
+        self.garden_selector_menu.add.button(
+            "WATER THE PLANTS",
+            self._water_the_plants
+        )
+
+        self.garden_selector_menu.add.button(
+            "CANCEL",
+            self._main_garden
+        )
+
+        self.garden_selector_menu.enable()
+
+    def _selected_garden(self, value, selected_garden):
+        """Selected garden number getter."""
+        self.__gardenbed_number = selected_garden
+        print(self.__gardenbed_number)
+
+    def _cut_plant_number(self, value, selected_plant):
+        """Selected plant number getter."""
+        self.__cut_plant_number = selected_plant
+        print(self.__cut_plant_number)
+
+    def _cut_plant(self):
+        """Delete plant by number."""
+        if self.__cut_plant_number >= 0 and self.__gardenbed_number >= 0:
+            self.master.delete_plant(
+                self.__gardenbed_number, self.__cut_plant_number
+            )
+
+    def _show_detail_statistics_menu(self):
+        pass
+
+    def _weed_plants(self):
+        if self.__gardenbed_number:
+            self.master.weed(self.__gardenbed_number)
+
+    def _water_the_plants(self):
+        if self.__gardenbed_number:
+            self.master.water(self.__gardenbed_number)
 
     def _call_main_menu(self):
         self.garden_menu.disable()
         self.menu.enable()
 
     def _do_step(self):
+        """Do step and update garden."""
         self.master.step()
         self.plants_list = [[] for _ in range(5)]
 
     def _main_garden(self):
+        """Return to garden."""
         if self.menu.is_enabled():
             self.menu.disable()
         if self.planting_menu.is_enabled():
             self.planting_menu.disable()
+        if self.garden_selector_menu.is_enabled():
+            self.garden_selector_menu.disable()
         self.garden_menu.enable()
 ########
 
@@ -241,8 +372,13 @@ class GardenApp:
         if self.garden_menu.is_enabled():
             self.garden_menu.update(pygame.event.get())
 
+        if self.garden_selector_menu.is_enabled():
+            self.garden_selector_menu.update(pygame.event.get())
+
         if self.planting_menu.is_enabled():
             self.planting_menu.update(pygame.event.get())
+
+        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -300,13 +436,13 @@ class GardenApp:
                             case "Poppy":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     poppy_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     poppy_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     poppy_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     poppy_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     poppy_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -315,13 +451,13 @@ class GardenApp:
                             case "Rose":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     rose_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     rose_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     rose_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     rose_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     rose_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -330,13 +466,13 @@ class GardenApp:
                             case "Violet":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     violet_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     violet_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     violet_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     violet_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     violet_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -345,15 +481,15 @@ class GardenApp:
                             case "Pineapple":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     pineapple_pct = 5
-                                elif plant._harvest_progress * 5 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 5 // 6:
                                     pineapple_pct = 4
-                                elif plant._harvest_progress * 4 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 6:
                                     pineapple_pct = 3
-                                elif plant._harvest_progress * 3 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max  * 3 // 6:
                                     pineapple_pct = 2
-                                elif plant._harvest_progress * 2 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 6:
                                     pineapple_pct = 1
-                                elif plant._harvest_progress * 1 // 6 >= 0:
+                                elif plant._harvest_max * 2 // 6 > plant._harvest_progress >= 0:
                                     pineapple_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -362,13 +498,13 @@ class GardenApp:
                             case "Apple":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     apple_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     apple_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     apple_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     apple_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     apple_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -377,15 +513,15 @@ class GardenApp:
                             case "Orange":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     orange_pct = 5
-                                elif plant._harvest_progress * 5 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 5 // 6:
                                     orange_pct = 4
-                                elif plant._harvest_progress * 4 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 6:
                                     orange_pct = 3
-                                elif plant._harvest_progress * 3 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 6:
                                     orange_pct = 2
-                                elif plant._harvest_progress * 2 // 6 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 6:
                                     orange_pct = 1
-                                elif plant._harvest_progress * 1 // 6 >= 0:
+                                elif plant._harvest_max * 2 // 6 > plant._harvest_progress >= 0:
                                     orange_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -394,9 +530,9 @@ class GardenApp:
                             case "Cactus":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     palm_pct = 2
-                                elif plant._harvest_progress * 2 // 3 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 3:
                                     palm_pct = 1
-                                elif plant._harvest_progress * 1 // 3 >= 0:
+                                elif plant._harvest_max * 2 // 3 > plant._harvest_progress >= 0:
                                     palm_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -405,13 +541,13 @@ class GardenApp:
                             case "Oak":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     oak_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     oak_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     oak_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     oak_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     oak_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -420,13 +556,13 @@ class GardenApp:
                             case "Pine":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     pine_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     pine_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     pine_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     pine_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     pine_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -435,9 +571,9 @@ class GardenApp:
                             case "Carrot":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     carrot_pct = 2
-                                elif plant._harvest_progress * 2 // 3 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 3:
                                     carrot_pct = 1
-                                elif plant._harvest_progress * 1 // 3 >= 0:
+                                elif plant._harvest_max * 2 // 3 > plant._harvest_progress >= 0:
                                     carrot_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -446,7 +582,7 @@ class GardenApp:
                             case "Potato":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     potato_pct = 1
-                                elif plant._harvest_progress * 1 // 2 >= 0:
+                                elif plant._harvest_progress < plant._harvest_max:
                                     potato_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -455,13 +591,13 @@ class GardenApp:
                             case "Tomato":
                                 if plant._harvest_progress >= plant._harvest_max:
                                     tomato_pct = 4
-                                elif plant._harvest_progress * 4 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
                                     tomato_pct = 3
-                                elif plant._harvest_progress * 3 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
                                     tomato_pct = 2
-                                elif plant._harvest_progress * 2 // 5 >= plant._harvest_max:
+                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
                                     tomato_pct = 1
-                                elif plant._harvest_progress * 1 // 5 >= 0:
+                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
                                     tomato_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
@@ -477,6 +613,9 @@ class GardenApp:
 
         if self.planting_menu.is_enabled():
             self.planting_menu.draw(self.screen)
+
+        if self.garden_selector_menu.is_enabled():
+            self.garden_selector_menu.draw(self.screen)
 
         if self.garden_menu.is_enabled():
             self.garden_menu.draw(self.screen)
