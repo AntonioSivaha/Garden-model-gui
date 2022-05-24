@@ -152,7 +152,7 @@ class GardenApp:
         )
 
         # Garden selector menu
-        self.__gardenbed_number: int = 0
+        self.__gardenbed_number: int = None
         self.garden_selector_menu = pygame_menu.Menu(
             title="",
             enabled=False,
@@ -162,6 +162,15 @@ class GardenApp:
 
         # Cut plant
         self.__cut_plant_number: int = 0
+
+        # Detail gardenbed statistics menu
+        self.statistics_menu = pygame_menu.Menu(
+            title="",
+            enabled=False,
+            width=600,
+            height=600,
+            onclose=self._main_garden
+        )
 
 ########
     def _plant(self):
@@ -245,13 +254,11 @@ class GardenApp:
             width=600,
             height=600
         )
-        # self.garden_selector_menu.add.label(
-        #     "SELECT GARDEN"
-        # ).translate(0, -100)
         
         self.garden_selector_menu.add.selector(
             title="GARDEN NUMBER",
             items=[
+                ("NONE", None),
                 ("1", 0),
                 ("2", 1),
                 ("3", 2),
@@ -322,7 +329,41 @@ class GardenApp:
             )
 
     def _show_detail_statistics_menu(self):
-        pass
+        """Run window with detail statistics about the plants 
+        in choosen gardenbed."""
+        self.garden_menu.disable()
+        self.statistics_menu = pygame_menu.Menu(
+            title="",
+            enabled=False,
+            width=600,
+            height=600,
+            onclose=self._main_garden
+        )
+        self.statistics_menu.add.label(
+            "DETAIL STATISTICS:"
+        )
+        if self.__gardenbed_number is None:
+            self._main_garden()
+            return
+        gbed = self.master.gardenbed[self.__gardenbed_number].garden
+        for n, gb in enumerate(gbed):
+            if gb not in ["Ambrosia", "Dandelion", "Cornflower"]:
+                self.statistics_menu.add.label(
+                    f"{n + 1}.Name: {gb.name}\n"
+                    f"  Harvest progress: {round((gb.harvest_max / gb.harvest_progress), 2)}\n"
+                    f"  Live: {round((gb.live_max / gb.live), 2)}\n"
+                    f"  Immunity: {round(gb.immunity, 2)}\n"
+                    f"  Ills list: {gb.ills if gb.ills else None}\n",
+                    align=pygame_menu.locals.ALIGN_LEFT,
+                    margin=(0, -1)
+                )
+        
+        self.statistics_menu.add.button(
+            "CLOSE",
+            self._main_garden
+        )
+
+        self.statistics_menu.enable()
 
     def _weed_plants(self):
         if self.__gardenbed_number:
@@ -349,6 +390,8 @@ class GardenApp:
             self.planting_menu.disable()
         if self.garden_selector_menu.is_enabled():
             self.garden_selector_menu.disable()
+        if self.statistics_menu.is_enabled():
+            self.statistics_menu.disable()
         self.garden_menu.enable()
 ########
 
@@ -378,7 +421,8 @@ class GardenApp:
         if self.planting_menu.is_enabled():
             self.planting_menu.update(pygame.event.get())
 
-        
+        if self.statistics_menu.is_enabled():
+            self.statistics_menu.update(pygame.event.get())
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -392,8 +436,7 @@ class GardenApp:
             elif event.type == pygame.KEYDOWN and \
                 event.key == pygame.K_ESCAPE and not self.menu.is_enabled():
                 print("ESC")
-                self.garden_menu.disable()
-                self.menu.enable()
+                self._main_garden()
 
     def _process_game_logic(self):
         x_pos = {
@@ -577,7 +620,7 @@ class GardenApp:
                                     carrot_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.carrot_sprites[tomato_pct]
+                                    self.carrot_sprites[carrot_pct]
                                 ))
                             case "Potato":
                                 if plant._harvest_progress >= plant._harvest_max:
@@ -617,6 +660,9 @@ class GardenApp:
         if self.garden_selector_menu.is_enabled():
             self.garden_selector_menu.draw(self.screen)
 
+        if self.statistics_menu.is_enabled():
+            self.statistics_menu.draw(self.screen)
+
         if self.garden_menu.is_enabled():
             self.garden_menu.draw(self.screen)
             self.screen.blit(self.garden_background, (0, 0))
@@ -627,7 +673,7 @@ class GardenApp:
                         plant.draw(self.screen)
 
         pygame.display.flip()
-        self.clock.tick(10)
+        self.clock.tick(20)
 
 
 class PlantObject:

@@ -71,7 +71,7 @@ class GardenBed:
                     self._garden.append(Tomato())
         else:
             print("You can't add more then 5 plants to garden.")
-            time.sleep(5)
+            # time.sleep(5)
             return
             # raise "You can't add more then 5 plants to garden."
 
@@ -81,7 +81,7 @@ class GardenBed:
             return self._garden.pop(position)
         except IndexError as err:
             print(err, "\nThis plant position is unavailable.")
-            time.sleep(5)
+            # time.sleep(5)
             return
             # raise "This plant position is unavailable."
 
