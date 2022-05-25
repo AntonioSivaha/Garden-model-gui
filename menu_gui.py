@@ -400,7 +400,7 @@ class GardenApp:
         
         self.detail_statistics_menu.add.button(
             "BACK",
-            self._main_garden
+            self._main_garden()
         )
 
         self.detail_statistics_menu.enable()
@@ -430,6 +430,8 @@ class GardenApp:
             self.planting_menu.disable()
         if self.garden_selector_menu.is_enabled():
             self.garden_selector_menu.disable()
+        if self.detail_statistics_menu.is_enabled():
+            self.detail_statistics_menu.disable()
         self.garden_menu.enable()
 
     def _back_to_menu(self):

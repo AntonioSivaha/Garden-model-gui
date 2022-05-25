@@ -376,4 +376,3 @@ class Master:
             json.dump(self.convert_garden_to_dict(self.__gbed), autosave)
         with open("autosave_warehouse.json", "w") as autosave:
             json.dump(self.__whouse.seeds, autosave)
-        print("Do step")
