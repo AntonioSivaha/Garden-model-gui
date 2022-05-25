@@ -151,7 +151,7 @@ class GardenApp:
         self.__cut_plant_number: int = 0
 
         # Detail gardenbed statistics menu
-        self.statistics_menu = pygame_menu.Menu(
+        self.detail_statistics_menu = pygame_menu.Menu(
             title="",
             enabled=False,
             width=600,
@@ -366,19 +366,20 @@ class GardenApp:
             self.master.delete_plant(
                 self.__gardenbed_number, self.__cut_plant_number
             )
+            self._do_step()
 
     def _show_detail_statistics_menu(self):
         """Run window with detail statistics about the plants 
         in choosen gardenbed."""
         self.garden_menu.disable()
-        self.statistics_menu = pygame_menu.Menu(
+        self.detail_statistics_menu = pygame_menu.Menu(
             title="",
             enabled=False,
             width=600,
             height=600,
             onclose=self._main_garden
         )
-        self.statistics_menu.add.label(
+        self.detail_statistics_menu.add.label(
             "DETAIL STATISTICS:"
         )
         if self.__gardenbed_number is None:
@@ -387,22 +388,22 @@ class GardenApp:
         gbed = self.master.gardenbed[self.__gardenbed_number].garden
         for n, gb in enumerate(gbed):
             if gb not in ["Ambrosia", "Dandelion", "Cornflower"]:
-                self.statistics_menu.add.label(
+                self.detail_statistics_menu.add.label(
                     f"{n + 1}.Name: {gb.name}\n"
-                    f"  Harvest progress: {round((gb.harvest_max / gb.harvest_progress), 2)}\n"
-                    f"  Live: {round((gb.live_max / gb.live), 2)}\n"
+                    f"  Harvest progress: {round(gb.harvest_progress, 2)} / {round(gb.harvest_max, 2)}\n"
+                    f"  Live: {int(gb.live)} / {gb.live_max}\n"
                     f"  Immunity: {round(gb.immunity, 2)}\n"
                     f"  Ills list: {gb.ills if gb.ills else None}\n",
                     align=pygame_menu.locals.ALIGN_LEFT,
                     margin=(0, -1)
                 )
         
-        self.statistics_menu.add.button(
-            "CLOSE",
+        self.detail_statistics_menu.add.button(
+            "BACK",
             self._main_garden
         )
 
-        self.statistics_menu.enable()
+        self.detail_statistics_menu.enable()
 
     def _weed_plants(self):
         if self.__gardenbed_number:
@@ -466,8 +467,8 @@ class GardenApp:
         if self.planting_menu.is_enabled():
             self.planting_menu.update(pygame.event.get())
 
-        if self.statistics_menu.is_enabled():
-            self.statistics_menu.update(pygame.event.get())
+        if self.detail_statistics_menu.is_enabled():
+            self.detail_statistics_menu.update(pygame.event.get())
 
         if self.warehouse_menu.is_enabled():
             self.warehouse_menu.update(pygame.event.get())
@@ -601,8 +602,8 @@ class GardenApp:
         if self.garden_selector_menu.is_enabled():
             self.garden_selector_menu.draw(self.screen)
 
-        if self.statistics_menu.is_enabled():
-            self.statistics_menu.draw(self.screen)
+        if self.detail_statistics_menu.is_enabled():
+            self.detail_statistics_menu.draw(self.screen)
 
         if self.warehouse_menu.is_enabled():
             self.screen.blit(self.main_menu_background, (0, 0))
