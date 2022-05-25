@@ -4,7 +4,7 @@ from pygame.math import Vector2
 import pygame_menu
 
 from Master import Master
-from utils.utils import load_sound, load_sprite
+from utils.utils import load_sound, load_sprite, blit_picture_by_harvest
 
 
 class GardenApp:
@@ -38,43 +38,31 @@ class GardenApp:
         self.master = master
         self.plants_list = [[] for _ in range(5)]
 
+        self.theme = pygame_menu.themes.THEME_DARK.copy()
+        self.theme.background_color = (0, 0, 0, 180)
+
         # Warehouse
         self.warehouse_theme = pygame_menu.themes.THEME_GREEN.copy()
         self.warehouse_menu = pygame_menu.Menu(
-            title="Warehouse",
-            width=1200,
-            height=800,
+            title="WAREHOUSE",
+            enabled=False,
+            width=600,
+            height=600,
             theme=self.warehouse_theme
-        )
-        for plant, count in self.master.warehouse.items():
-            self.warehouse_menu.add.button(
-                f"{plant}: {count}"
-            )
-        self.warehouse_menu.add.button(
-            "Back",
-            pygame_menu.events.BACK
         )
 
         # Statistics
         self.statistics_theme = pygame_menu.themes.THEME_BLUE.copy()
         self.statistics_menu = pygame_menu.Menu(
-            title="Statistics",
-            width=1200,
-            height=800,
-            theme=self.statistics_theme
-        )
-        for plant, value in self.master.avg_statistics().items():
-            self.statistics_menu.add.button(
-                f"{plant}: {value}"
-            )
-        self.statistics_menu.add.button(
-            "Back",
-            pygame_menu.events.BACK
+            title="STATISTICS",
+            enabled=False,
+            width=600,
+            height=450,
+            theme=self.theme,
+            onclose=self._back_to_menu
         )
 
         # Main Menu
-        self.theme = pygame_menu.themes.THEME_DARK.copy()
-        self.theme.background_color = (0, 0, 0, 180)
         self.menu = pygame_menu.Menu(
             title="",
             enabled=False,
@@ -95,11 +83,11 @@ class GardenApp:
         )
         self.menu.add.button(
             "WAREHOUSE",
-            self.warehouse_menu
+            self._warehouse_menu
         )
         self.menu.add.button(
             "STATISTICS",
-            self.statistics_menu
+            self._statistics_menu
         )
         self.menu.add.button(
             "EXIT",
@@ -107,7 +95,7 @@ class GardenApp:
         )
 
         # Garden menu
-        self.garden_menu_theme = pygame_menu.themes.THEME_GREEN.copy()
+        self.garden_menu_theme = pygame_menu.themes.THEME_DARK.copy()
         # self.garden_menu_theme.background_color = (0, 0, 0, 180)
         self.garden_menu = pygame_menu.Menu(
             title="Garden",
@@ -172,7 +160,57 @@ class GardenApp:
             onclose=self._main_garden
         )
 
+        self._do_step()
+
 ########
+    def _statistics_menu(self):
+        self.menu.disable()
+        self.garden_menu.disable()
+        self.statistics_menu = pygame_menu.Menu(
+            title="STATISTICS",
+            enabled=False,
+            width=600,
+            height=450,
+            theme=self.theme,
+            onclose=self._back_to_menu
+        )
+
+        for plant, value in self.master.avg_statistics().items():
+            self.statistics_menu.add.button(
+                f"{plant}: {value}"
+            )
+
+        self.statistics_menu.add.button(
+            "Back",
+            self._back_to_menu
+        )
+
+        self.statistics_menu.enable()
+
+    def _warehouse_menu(self):
+        self.menu.disable()
+        self.garden_menu.disable()
+        # self.warehouse_theme = pygame_menu.themes.THEME_GREEN.copy()
+        self.warehouse_menu = pygame_menu.Menu(
+            title="Warehouse",
+            enabled=False,
+            width=600,
+            height=600,
+            theme=self.theme,
+            onclose=self._back_to_menu
+        )
+
+        for plant, count in self.master.warehouse.items():
+            self.warehouse_menu.add.button(
+                f"{plant}: {count}"
+            )
+        self.warehouse_menu.add.button(
+            "Back",
+            self._back_to_menu
+        )
+
+        self.warehouse_menu.enable()
+
     def _plant(self):
         """Garden menu option for create new plant."""
         self.garden_menu.disable()
@@ -180,7 +218,8 @@ class GardenApp:
             title="",
             enabled=False,
             width=600,
-            height=400
+            height=400,
+            onclose=self._main_garden
         )
         self.planting_menu.add.selector(
             title="PLANT",
@@ -252,7 +291,8 @@ class GardenApp:
             title="",
             enabled=False,
             width=600,
-            height=600
+            height=600,
+            onclose=self._main_garden
         )
         
         self.garden_selector_menu.add.selector(
@@ -287,7 +327,7 @@ class GardenApp:
         self.garden_selector_menu.add.button(
             "CUT PLANT",
             self._cut_plant
-        )
+        ).translate(0, -40)
 
         self.garden_selector_menu.add.button(
             "DETAIL STATISTICS",
@@ -307,7 +347,7 @@ class GardenApp:
         self.garden_selector_menu.add.button(
             "CANCEL",
             self._main_garden
-        )
+        ).translate(0, 50)
 
         self.garden_selector_menu.enable()
 
@@ -390,9 +430,15 @@ class GardenApp:
             self.planting_menu.disable()
         if self.garden_selector_menu.is_enabled():
             self.garden_selector_menu.disable()
+        self.garden_menu.enable()
+
+    def _back_to_menu(self):
+        """Return to main menu."""
+        if self.warehouse_menu.is_enabled():
+            self.warehouse_menu.disable()
         if self.statistics_menu.is_enabled():
             self.statistics_menu.disable()
-        self.garden_menu.enable()
+        self.menu.enable()
 ########
 
     def main_loop(self):
@@ -420,6 +466,12 @@ class GardenApp:
 
         if self.planting_menu.is_enabled():
             self.planting_menu.update(pygame.event.get())
+
+        if self.statistics_menu.is_enabled():
+            self.statistics_menu.update(pygame.event.get())
+
+        if self.warehouse_menu.is_enabled():
+            self.warehouse_menu.update(pygame.event.get())
 
         if self.statistics_menu.is_enabled():
             self.statistics_menu.update(pygame.event.get())
@@ -477,174 +529,64 @@ class GardenApp:
                     else:
                         match plant._name:
                             case "Poppy":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    poppy_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    poppy_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    poppy_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    poppy_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    poppy_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.poppy_sprites[poppy_pct]
+                                    self.poppy_sprites[blit_picture_by_harvest(plant, len(self.poppy_sprites))]
                                 ))
                             case "Rose":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    rose_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    rose_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    rose_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    rose_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    rose_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.rose_sprites[rose_pct]
+                                    self.rose_sprites[blit_picture_by_harvest(plant, len(self.rose_sprites))]
                                 ))
                             case "Violet":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    violet_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    violet_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    violet_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    violet_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    violet_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.violet_sprites[violet_pct]
+                                    self.violet_sprites[blit_picture_by_harvest(plant, len(self.violet_sprites))]
                                 ))
                             case "Pineapple":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    pineapple_pct = 5
-                                elif plant._harvest_progress >= plant._harvest_max * 5 // 6:
-                                    pineapple_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 6:
-                                    pineapple_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max  * 3 // 6:
-                                    pineapple_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 6:
-                                    pineapple_pct = 1
-                                elif plant._harvest_max * 2 // 6 > plant._harvest_progress >= 0:
-                                    pineapple_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.pineapple_sprites[pineapple_pct]
+                                    self.pineapple_sprites[blit_picture_by_harvest(plant, len(self.pineapple_sprites))]
                                 ))
                             case "Apple":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    apple_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    apple_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    apple_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    apple_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    apple_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.apple_sprites[apple_pct]
+                                    self.apple_sprites[blit_picture_by_harvest(plant, len(self.apple_sprites))]
                                 ))
                             case "Orange":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    orange_pct = 5
-                                elif plant._harvest_progress >= plant._harvest_max * 5 // 6:
-                                    orange_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 6:
-                                    orange_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 6:
-                                    orange_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 6:
-                                    orange_pct = 1
-                                elif plant._harvest_max * 2 // 6 > plant._harvest_progress >= 0:
-                                    orange_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.orange_sprites[orange_pct]
+                                    self.orange_sprites[blit_picture_by_harvest(plant, len(self.orange_sprites))]
                                 ))
                             case "Cactus":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    palm_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 3:
-                                    palm_pct = 1
-                                elif plant._harvest_max * 2 // 3 > plant._harvest_progress >= 0:
-                                    palm_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.palm_sprites[palm_pct]
+                                    self.palm_sprites[blit_picture_by_harvest(plant, len(self.palm_sprites))]
                                 ))
                             case "Oak":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    oak_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    oak_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    oak_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    oak_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    oak_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.oak_sprites[oak_pct]
+                                    self.oak_sprites[blit_picture_by_harvest(plant, len(self.oak_sprites))]
                                 ))
                             case "Pine":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    pine_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    pine_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    pine_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    pine_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    pine_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.pine_sprites[pine_pct]
+                                    self.pine_sprites[blit_picture_by_harvest(plant, len(self.pine_sprites))]
                                 ))
                             case "Carrot":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    carrot_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 3:
-                                    carrot_pct = 1
-                                elif plant._harvest_max * 2 // 3 > plant._harvest_progress >= 0:
-                                    carrot_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.carrot_sprites[carrot_pct]
+                                    self.carrot_sprites[blit_picture_by_harvest(plant, len(self.carrot_sprites))]
                                 ))
                             case "Potato":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    potato_pct = 1
-                                elif plant._harvest_progress < plant._harvest_max:
-                                    potato_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.potato_sprites[potato_pct]
+                                    self.potato_sprites[blit_picture_by_harvest(plant, len(self.potato_sprites))]
                                 ))
                             case "Tomato":
-                                if plant._harvest_progress >= plant._harvest_max:
-                                    tomato_pct = 4
-                                elif plant._harvest_progress >= plant._harvest_max * 4 // 5:
-                                    tomato_pct = 3
-                                elif plant._harvest_progress >= plant._harvest_max * 3 // 5:
-                                    tomato_pct = 2
-                                elif plant._harvest_progress >= plant._harvest_max * 2 // 5:
-                                    tomato_pct = 1
-                                elif plant._harvest_max * 2 // 5 > plant._harvest_progress >= 0:
-                                    tomato_pct = 0
                                 self.plants_list[gbed_num].append(PlantObject(
                                     (x_pos[plant_num], y_pos[gbed_num]),
-                                    self.tomato_sprites[tomato_pct]
+                                    self.tomato_sprites[blit_picture_by_harvest(plant, len(self.tomato_sprites))]
                                 ))
 
     def _draw(self):
@@ -661,6 +603,14 @@ class GardenApp:
             self.garden_selector_menu.draw(self.screen)
 
         if self.statistics_menu.is_enabled():
+            self.statistics_menu.draw(self.screen)
+
+        if self.warehouse_menu.is_enabled():
+            self.screen.blit(self.main_menu_background, (0, 0))
+            self.warehouse_menu.draw(self.screen)
+
+        if self.statistics_menu.is_enabled():
+            self.screen.blit(self.main_menu_background, (0, 0))
             self.statistics_menu.draw(self.screen)
 
         if self.garden_menu.is_enabled():
