@@ -1,4 +1,3 @@
-from doctest import master
 import pygame
 from pygame.math import Vector2
 import pygame_menu
