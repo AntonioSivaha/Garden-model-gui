@@ -1,6 +1,7 @@
 import pygame
 from pygame.math import Vector2
 import pygame_menu
+from sympy import apart
 
 from Master import Master
 from utils.utils import load_sound, load_sprite, blit_picture_by_harvest
@@ -24,7 +25,8 @@ class GardenApp:
         self.potato_sprites = tuple(load_sprite(f"potato/potato_{n}.png") for n in range(1, 2 + 1))
         self.carrot_sprites = tuple(load_sprite(f"melon/melon_{n}.png") for n in range(1, 3 + 1))
         self.pineapple_sprites = tuple(load_sprite(f"grape/grape_{n}.png") for n in range(1, 6 + 1))
-        self.apple_sprites = tuple(load_sprite(f"apple/apple_{n}.png") for n in range(1, 5 + 1))
+        self.apple_sprites = list(load_sprite(f"apple/apple_{n}.png") for n in range(1, 5 + 1))
+        self.apple_sprites[-1] = pygame.transform.scale(self.apple_sprites[-1], (100, 160))
         self.poppy_sprites = tuple(load_sprite(f"poppy/Poppy_Stage_{n}.png") for n in range(1, 5 + 1))
         self.violet_sprites = tuple(load_sprite(f"sunflower/Sunflower_Stage_{n}.png") for n in range(1, 5 + 1))
         self.rose_sprites = tuple(load_sprite(f"summer_spangle/Summer_Spangle_Stage_{n}.png") for n in range(1, 5 + 1))
@@ -174,9 +176,11 @@ class GardenApp:
             onclose=self._back_to_menu
         )
 
-        for plant, value in self.master.avg_statistics().items():
+        for param, value in self.master.avg_statistics().items():
+            if param == "Live" or param == "Harvest":
+                value = round(value, 2)
             self.statistics_menu.add.button(
-                f"{plant}: {value}"
+                f"{param}: {value}"
             )
 
         self.statistics_menu.add.button(
@@ -242,7 +246,7 @@ class GardenApp:
         )
 
         self.planting_menu.add.selector(
-            title="GARDENT",
+            title="GARDEN",
             items=[
                 ("1", 0),
                 ("2", 1),
@@ -371,7 +375,11 @@ class GardenApp:
     def _show_detail_statistics_menu(self):
         """Run window with detail statistics about the plants 
         in choosen gardenbed."""
-        self.garden_menu.disable()
+        # self.garden_menu.disable()
+        self.garden_selector_menu.disable()
+        if self.__gardenbed_number is None:
+            self._main_garden()
+            return
         self.detail_statistics_menu = pygame_menu.Menu(
             title="",
             enabled=False,
@@ -382,9 +390,6 @@ class GardenApp:
         self.detail_statistics_menu.add.label(
             "DETAIL STATISTICS:"
         )
-        if self.__gardenbed_number is None:
-            self._main_garden()
-            return
         gbed = self.master.gardenbed[self.__gardenbed_number].garden
         for n, gb in enumerate(gbed):
             if gb not in ["Ambrosia", "Dandelion", "Cornflower"]:
@@ -547,32 +552,32 @@ class GardenApp:
                                 ))
                             case "Pineapple":
                                 self.plants_list[gbed_num].append(PlantObject(
-                                    (x_pos[plant_num], y_pos[gbed_num]),
+                                    (x_pos[plant_num], y_pos[gbed_num] - 50),
                                     self.pineapple_sprites[blit_picture_by_harvest(plant, len(self.pineapple_sprites))]
                                 ))
                             case "Apple":
                                 self.plants_list[gbed_num].append(PlantObject(
-                                    (x_pos[plant_num], y_pos[gbed_num]),
+                                    (x_pos[plant_num], y_pos[gbed_num] - 30),
                                     self.apple_sprites[blit_picture_by_harvest(plant, len(self.apple_sprites))]
                                 ))
                             case "Orange":
                                 self.plants_list[gbed_num].append(PlantObject(
-                                    (x_pos[plant_num], y_pos[gbed_num]),
+                                    (x_pos[plant_num], y_pos[gbed_num] - 50),
                                     self.orange_sprites[blit_picture_by_harvest(plant, len(self.orange_sprites))]
                                 ))
                             case "Cactus":
                                 self.plants_list[gbed_num].append(PlantObject(
-                                    (x_pos[plant_num], y_pos[gbed_num]),
+                                    (x_pos[plant_num], y_pos[gbed_num] - 50),
                                     self.palm_sprites[blit_picture_by_harvest(plant, len(self.palm_sprites))]
                                 ))
                             case "Oak":
                                 self.plants_list[gbed_num].append(PlantObject(
-                                    (x_pos[plant_num], y_pos[gbed_num]),
+                                    (x_pos[plant_num], y_pos[gbed_num] - 50),
                                     self.oak_sprites[blit_picture_by_harvest(plant, len(self.oak_sprites))]
                                 ))
                             case "Pine":
                                 self.plants_list[gbed_num].append(PlantObject(
-                                    (x_pos[plant_num], y_pos[gbed_num]),
+                                    (x_pos[plant_num], y_pos[gbed_num] - 50),
                                     self.pine_sprites[blit_picture_by_harvest(plant, len(self.pine_sprites))]
                                 ))
                             case "Carrot":
